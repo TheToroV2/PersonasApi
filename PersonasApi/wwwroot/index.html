@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Personas App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Personas App</h1>
+
+    <!-- User Registration -->
+    <h2>Registrar Usuario</h2>
+    <form id="registerForm">
+        <input type="text" id="regUsuario" placeholder="Pass" required>
+        <input type="password" id="regPass" placeholder="Pass" required>
+        <button type="submit">Registrar</button>
+    </form>
+
+    <!-- User Login -->
+    <h2>Login Usuario</h2>
+    <form id="loginForm">
+        <input type="text" id="loginUsuario" placeholder="Usuario" required>
+        <input type="password" id="loginPass" placeholder="Pass" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <!-- Create Persona Form -->
+    <h2>Crear Nueva Persona</h2>
+    <form id="personaForm">
+        <input type="text" id="nombres" placeholder="Nombres" required>
+        <input type="text" id="apellidos" placeholder="Apellidos" required>
+        <input type="text" id="tipoIdentificacion" placeholder="Tipo Identificacion" required>
+        <input type="text" id="numeroIdentificacion" placeholder="Numero Identificacion" required>
+        <input type="email" id="email" placeholder="Email">
+        <button type="submit">Crear Persona</button>
+    </form>
+
+    <!-- Buttons -->
+    <h2>Acciones Personas</h2>
+    <button id="btnGetAll">Get Personas (Normal)</button>
+    <button id="btnGetSP">Get Personas (SP)</button>
+
+    <!-- Personas Table -->
+    <h2>Lista de Personas</h2>
+    <table id="personasTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre Completo</th>
+                <th>Tipo Identificacion</th>
+                <th>Numero Identificacion</th>
+                <th>Email</th>
+                <th>Fecha Creacion</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="6">Cargando...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const tableBody = document.querySelector('#personasTable tbody');
+
+        // --- Load Personas ---
+        async function loadPersonas(url = '/api/Personas') {
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                tableBody.innerHTML = '';
+                data.forEach(p => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                            <td>${p.identificador}</td>
+                            <td>${p.nombreCompleto}</td>
+                            <td>${p.tipoIdentificacion}</td>
+                            <td>${p.numeroIdentificacion}</td>
+                            <td>${p.email || '-'}</td>
+                            <td>${new Date(p.fechaCreacion).toLocaleString()}</td>
+                        `;
+                    tableBody.appendChild(row);
+                });
+            } catch (err) {
+                console.error(err);
+                tableBody.innerHTML = '<tr><td colspan="6">Error cargando datos</td></tr>';
+            }
+        }
+
+        // --- Buttons ---
+        document.querySelector('#btnGetAll').addEventListener('click', () => loadPersonas('/api/Personas'));
+        document.querySelector('#btnGetSP').addEventListener('click', () => loadPersonas('/api/Personas/sp'));
+
+        // --- Create Persona ---
+        document.querySelector('#personaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const personaData = {
+                nombres: document.querySelector('#nombres').value,
+                apellidos: document.querySelector('#apellidos').value,
+                tipoIdentificacion: document.querySelector('#tipoIdentificacion').value,
+                numeroIdentificacion: document.querySelector('#numeroIdentificacion').value,
+                email: document.querySelector('#email').value
+            };
+
+            try {
+                const res = await fetch('/api/Personas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(personaData)
+                });
+                if (res.ok) {
+                    alert('Persona creada!');
+                    loadPersonas();
+                    e.target.reset();
+                } else {
+                    alert('Error creando persona');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error en la petición');
+            }
+        });
+
+        // --- Register User ---
+        document.querySelector('#registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userData = {
+                usuario: document.querySelector('#regUsuario').value,
+                pass: document.querySelector('#regPass').value
+            };
+
+            try {
+                const res = await fetch('/api/Usuario/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                if (res.ok) {
+                    alert('Usuario registrado!');
+                    e.target.reset();
+                } else {
+                    const error = await res.json();
+                    alert(error.message || 'Error registrando usuario');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error en la petición');
+            }
+        });
+
+        // --- Login User ---
+        document.querySelector('#loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const usuario = document.querySelector('#loginUsuario').value;
+            const pass = document.querySelector('#loginPass').value;
+
+            try {
+                const res = await fetch('/api/Usuario/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, pass })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    alert('Login successful | Usuario: ' + data.usuario);
+                } else {
+                    const error = await res.json();
+                    alert(error.message || 'Login failed');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Login failed');
+            }
+        });
+
+        // --- Initial load ---
+        loadPersonas();
+    </script>
+</body>
+</html>
