@@ -95,13 +95,13 @@ Frontend simple: http://localhost:5207/index.html
 
 index.html permite:
 
-Registrar usuarios
+- Registrar usuarios
 
-Login de usuarios
+- Login de usuarios
 
-Crear nuevas personas
+- Crear nuevas personas
 
-Consultar personas (normal y con SP)
+- Consultar personas (normal y con SP)
 
 Solo abre el navegador y navega a: http://localhost:5207/index.html
 
